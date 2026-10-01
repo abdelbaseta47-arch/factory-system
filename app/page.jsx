@@ -2,13 +2,11 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 
 export default async function WorkerPage() {
-  // دالة إرسال البيانات وإنشاء الجدول تلقائياً
   async function recordAttendance(formData) {
     'use server';
     const code = formData.get('workerCode');
     
     if (code) {
-      // 1. الكود هينشئ الجدول بنفسه لو مكنش موجود (عشان نتخطى خطأ Vercel)
       await sql`
         CREATE TABLE IF NOT EXISTS attendance (
           id SERIAL PRIMARY KEY,
@@ -16,21 +14,16 @@ export default async function WorkerPage() {
           login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `;
-      
-      // 2. تسجيل الحضور فوراً
       await sql`INSERT INTO attendance (worker_code) VALUES (${code})`;
-      revalidatePath('/'); // تحديث الصفحة
+      revalidatePath('/'); 
     }
   }
 
-  // محاولة جلب البيانات (مع حماية لو الجدول لسه متعملش)
   let rows = [];
   try {
     const result = await sql`SELECT * FROM attendance ORDER BY login_time DESC LIMIT 5`;
     rows = result.rows;
-  } catch (e) {
-    // لو الجدول لسه متمش إنشاؤه، مش هيعمل خطأ، هيعرض بس القائمة فاضية
-  }
+  } catch (e) {}
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial', textAlign: 'center', direction: 'rtl', maxWidth: '400px', margin: '0 auto' }}>
@@ -38,7 +31,7 @@ export default async function WorkerPage() {
       
       <div style={{ marginTop: '20px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
         <form action={recordAttendance}>
-          <p style={{ fontWeight: 'bold' }}>أدخل كود العامل الخاص بك:</p>
+          <p style={{ fontWeight: 'bold' }}>أدخل كود العامل لتسجيل الحضور:</p>
           <input 
             type="number" 
             name="workerCode"
@@ -53,14 +46,22 @@ export default async function WorkerPage() {
       </div>
 
       <div style={{ marginTop: '30px', textAlign: 'right', backgroundColor: '#e9ecef', padding: '10px', borderRadius: '5px' }}>
-        <h3 style={{ color: '#333', fontSize: '16px' }}>آخر حركات مسجلة:</h3>
+        <h3 style={{ color: '#333', fontSize: '16px' }}>سجل الحضور الأخير:</h3>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {rows.length > 0 ? rows.map((row, index) => (
-            <li key={index} style={{ padding: '8px 0', borderBottom: '1px solid #ccc', fontSize: '14px' }}>
-              كود العامل: <strong>{row.worker_code}</strong> | الوقت: {new Date(row.login_time).toLocaleTimeString('ar-SA')}
-            </li>
-          )) : (
-            <li style={{ fontSize: '14px', color: '#666' }}>لا توجد حركات حتى الآن. تسجيلك الأول سيقوم بإنشاء القاعدة أوتوماتيكياً!</li>
+          {rows.length > 0 ? rows.map((row, index) => {
+            // تحويل توقيت الخادم إلى توقيت السعودية المحلي
+            const localTime = new Date(row.login_time + 'Z').toLocaleString('ar-SA', {
+              timeZone: 'Asia/Riyadh',
+              dateStyle: 'short',
+              timeStyle: 'short'
+            });
+            return (
+              <li key={index} style={{ padding: '8px 0', borderBottom: '1px solid #ccc', fontSize: '14px' }}>
+                كود العامل: <strong>{row.worker_code}</strong> | الوقت: {localTime}
+              </li>
+            );
+          }) : (
+            <li style={{ fontSize: '14px', color: '#666' }}>لا توجد حركات حتى الآن.</li>
           )}
         </ul>
       </div>
