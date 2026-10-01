@@ -8,9 +8,8 @@ export default async function WorkerDashboard({ searchParams }) {
   const currentTab = params?.tab || 'tasks';
   const selectedDate = params?.date || new Date().toISOString().split('T')[0];
   const requestSubtype = params?.sub || 'loan';
-  const lang = params?.lang || 'ar'; // اللغة الحالية (عربي افتراضياً)
+  const lang = params?.lang || 'ar';
 
-طا   // قاموس الترجمة البسيط لتغيير لغة الواجهة
   const t = {
     ar: {
       title: "نظام إدارة المصنع",
@@ -36,7 +35,7 @@ export default async function WorkerDashboard({ searchParams }) {
       requestsTitle: "نافذة تقديم الطلبات",
       loanBtn: "💰 طلب سلفة مالية",
       leaveBtn: "🌴 طلب إجازة",
-      issueBtn: "⚠️ إبلاغ عن عطل / مشكلة",
+      issueBtn: "⚠️️ إبلاغ عن عطل / مشكلة",
       amountLabel: "المبلغ المطلوب (بالريال):",
       notesLabel: "سبب أو تفاصيل السلفة:",
       sendLoan: "إرسال طلب السلفة",
@@ -99,7 +98,7 @@ export default async function WorkerDashboard({ searchParams }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'Cairo, Tahoma, Arial, sans-serif', direction: lang === 'ar' ? 'rtl' : 'ltr', margin: 0, padding: 0, position: 'relative' }}>
       
-      {/* زر الترجمة في أقصى اليسار تماماً علوي */}
+      {/* زر الترجمة في أقصى اليسار العلوي */}
       <div style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 100 }}>
         <a 
           href={`/?code=${workerCode || ''}&project=${encodeURIComponent(currentProject || '')}&tab=${currentTab}&date=${selectedDate}&sub=${requestSubtype}&lang=${lang === 'ar' ? 'en' : 'ar'}`}
@@ -109,7 +108,6 @@ export default async function WorkerDashboard({ searchParams }) {
         </a>
       </div>
 
-      {/* 1. مرحلة تسجيل الدخول: بالكود فقط */}
       {!workerCode ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
           <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', width: '100%', maxWidth: '400px', borderTop: '6px solid #0284c7', textAlign: 'center' }}>
@@ -138,7 +136,6 @@ export default async function WorkerDashboard({ searchParams }) {
           </div>
         </div>
       ) : !currentProject ? (
-        /* 2. مرحلة اختيار المشروع وتأكيد الحضور */
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
           <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', width: '100%', maxWidth: '450px', borderTop: '6px solid #16a34a' }}>
             <h2 style={{ color: '#1e293b', fontSize: '22px', margin: '0 0 8px 0', textAlign: 'center' }}>{t.welcome} {workerCode}</h2>
@@ -184,11 +181,9 @@ export default async function WorkerDashboard({ searchParams }) {
           </div>
         </div>
       ) : (
-        /* 3. اللوحة الرئيسية مع قائمة جانبية قابلة للطي للموبايل (Checkbox Hack للتجاوب الفوري بدون مشاكل) */
         <div>
           <input type="checkbox" id="sidebar-toggle" style={{ display: 'none' }} />
 
-          {/* ستايل مخصص لإخفاء وإظهار القائمة الجانبية على الموبايل */}
           <style dangerouslySetInnerHTML={{__html: `
             .sidebar {
               position: fixed;
@@ -234,7 +229,6 @@ export default async function WorkerDashboard({ searchParams }) {
 
           <div className="layout-container">
             
-            {/* زر القائمة (ثلاث شرط) يظهر فقط على الموبايل */}
             <div style={{ padding: '15px 20px', backgroundColor: '#1e293b', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label htmlFor="sidebar-toggle" className="menu-btn" style={{ background: '#0284c7', color: '#fff', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>
                 {t.menuToggle}
@@ -242,7 +236,6 @@ export default async function WorkerDashboard({ searchParams }) {
               <span style={{ fontSize: '14px', color: '#38bdf8' }}>{t.welcome} {workerCode}</span>
             </div>
 
-            {/* القائمة الجانبية بالطول */}
             <aside className="sidebar">
               <div style={{ marginBottom: '30px', borderBottom: '1px solid #334155', paddingBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#38bdf8' }}>{t.welcome} {workerCode}</h3>
@@ -272,10 +265,8 @@ export default async function WorkerDashboard({ searchParams }) {
               </form>
             </aside>
 
-            {/* المحتوى الرئيسي */}
             <main className="main-content">
               
-              {/* شريط الفلتر اليومي */}
               <div style={{ backgroundColor: '#ffffff', padding: '15px 25px', borderRadius: '14px', marginBottom: '25px', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
                 <div>
                   <h2 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
@@ -304,7 +295,6 @@ export default async function WorkerDashboard({ searchParams }) {
                 </form>
               </div>
 
-              {/* محتوى التابة الأولى: المهام */}
               {currentTab === 'tasks' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'grid', gap: '15px' }}>
@@ -319,11 +309,9 @@ export default async function WorkerDashboard({ searchParams }) {
                 </div>
               )}
 
-              {/* محتوى التابة الثانية: تقديم الطلبات (أزارير ثابتة ومفصلة) */}
               {currentTab === 'requests' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
                   
-                  {/* الأزارير الثلاثة الثابتة جنب بعض */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '25px' }}>
                     <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan&lang=${lang}`} style={{ padding: '12px', textAlign: 'center', borderRadius: '10px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px', backgroundColor: requestSubtype === 'loan' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'loan' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>
                       {t.loanBtn}
@@ -336,7 +324,6 @@ export default async function WorkerDashboard({ searchParams }) {
                     </a>
                   </div>
 
-                  {/* طلب سلفة */}
                   {requestSubtype === 'loan' && (
                     <form action={async (formData) => {
                       'use server';
@@ -379,7 +366,6 @@ export default async function WorkerDashboard({ searchParams }) {
                     </form>
                   )}
 
-                  {/* طلب إجازة */}
                   {requestSubtype === 'leave' && (
                     <form action={async (formData) => {
                       'use server';
@@ -416,7 +402,6 @@ export default async function WorkerDashboard({ searchParams }) {
                     </form>
                   )}
 
-                  {/* إبلاغ عن مشكلة */}
                   {requestSubtype === 'issue' && (
                     <form action={async (formData) => {
                       'use server';
@@ -447,7 +432,6 @@ export default async function WorkerDashboard({ searchParams }) {
                 </div>
               )}
 
-              {/* محتوى التابة الثالثة: متابعة الطلبات */}
               {currentTab === 'tracking' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '25px', borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', border: '1px solid #e2e8f0' }}>
                   <h3 style={{ marginTop: 0, color: '#1e293b', fontSize: '16px' }}>{t.trackingTitle} ({selectedDate})</h3>
