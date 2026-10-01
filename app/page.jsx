@@ -2,51 +2,50 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 
 export default async function WorkerPage({ searchParams }) {
-  // استقبال كود العامل من الرابط (طريقة مضمونة 100% ولا تتأثر بالمتصفح)
   const params = await searchParams;
   const workerCode = params?.code;
 
-  // 1. دالة تسجيل الدخول (تحويل العامل للوحة الخاصة به)
+  // 1. دالة تسجيل الدخول المحمية
   async function handleLogin(formData) {
     'use server';
     const code = formData.get('code');
     if (code) {
-      // إنشاء الجداول أوتوماتيكياً لو مش موجودة
-      await sql`
-        CREATE TABLE IF NOT EXISTS attendance (
-          id SERIAL PRIMARY KEY,
-          worker_code VARCHAR(50) NOT NULL,
-          action_type VARCHAR(50) NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
-      await sql`
-        CREATE TABLE IF NOT EXISTS requests (
-          id SERIAL PRIMARY KEY,
-          worker_code VARCHAR(50) NOT NULL,
-          req_type VARCHAR(50) NOT NULL,
-          details TEXT,
-          status VARCHAR(50) DEFAULT 'قيد المراجعة',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
+      try {
+        // محاولة إنشاء الجداول أوتوماتيكياً
+        await sql`
+          CREATE TABLE IF NOT EXISTS attendance (
+            id SERIAL PRIMARY KEY,
+            worker_code VARCHAR(50) NOT NULL,
+            action_type VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `;
+        await sql`
+          CREATE TABLE IF NOT EXISTS requests (
+            id SERIAL PRIMARY KEY,
+            worker_code VARCHAR(50) NOT NULL,
+            req_type VARCHAR(50) NOT NULL,
+            details TEXT,
+            status VARCHAR(50) DEFAULT 'قيد المراجعة',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `;
+        await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'حضور')`;
+      } catch (error) {
+        console.log("DB Connection error:", error);
+      }
       
-      await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'حضور')`;
-      
-      // إعادة توجيه الصفحة للوحة العامل برقم الكود
       const { redirect } = await import('next/navigation');
       redirect(`/?code=${code}`);
     }
   }
 
-  // 2. دالة تسجيل الانصراف
   async function handleLogout() {
     'use server';
     const { redirect } = await import('next/navigation');
     redirect(`/`);
   }
 
-  // 3. دالة إرسال الطلبات
   async function submitRequest(formData) {
     'use server';
     const code = formData.get('workerCode');
@@ -54,12 +53,14 @@ export default async function WorkerPage({ searchParams }) {
     const details = formData.get('details');
     
     if (code && type && details) {
-      await sql`INSERT INTO requests (worker_code, req_type, details) VALUES (${code}, ${type}, ${details})`;
+      try {
+        await sql`INSERT INTO requests (worker_code, req_type, details) VALUES (${code}, ${type}, ${details})`;
+      } catch (error) {}
       revalidatePath(`/?code=${code}`);
     }
   }
 
-  // --- إذا لم يتم إدخال الكود (شاشة تسجيل الدخول) ---
+  // --- شاشة تسجيل الدخول ---
   if (!workerCode) {
     return (
       <div style={{ padding: '20px', fontFamily: 'Arial', textAlign: 'center', direction: 'rtl', maxWidth: '400px', margin: '50px auto' }}>
@@ -83,7 +84,7 @@ export default async function WorkerPage({ searchParams }) {
     );
   }
 
-  // --- لوحة التحكم الخاصة بالعامل (بعد تسجيل الدخول) ---
+  // --- لوحة التحكم الخاصة بالعامل ---
   let myRequests = [];
   try {
     const res = await sql`SELECT * FROM requests WHERE worker_code = ${workerCode} ORDER BY created_at DESC LIMIT 5`;
