@@ -1,17 +1,17 @@
 import { sql } from '@vercel/postgres';
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-export default async function WorkerPage() {
-  // التعديل هنا: إضافة كلمة await لانتظار تحميل الجلسة
-  const cookieStore = await cookies();
-  const workerCode = cookieStore.get('workerCode')?.value;
+export default async function WorkerPage({ searchParams }) {
+  // استقبال كود العامل من الرابط (طريقة مضمونة 100% ولا تتأثر بالمتصفح)
+  const params = await searchParams;
+  const workerCode = params?.code;
 
-  // 1. دالة تسجيل الدخول (الحضور)
-  async function login(formData) {
+  // 1. دالة تسجيل الدخول (تحويل العامل للوحة الخاصة به)
+  async function handleLogin(formData) {
     'use server';
     const code = formData.get('code');
     if (code) {
+      // إنشاء الجداول أوتوماتيكياً لو مش موجودة
       await sql`
         CREATE TABLE IF NOT EXISTS attendance (
           id SERIAL PRIMARY KEY,
@@ -33,49 +33,49 @@ export default async function WorkerPage() {
       
       await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'حضور')`;
       
-      const asyncCookies = await cookies();
-      asyncCookies.set('workerCode', code, { maxAge: 60 * 60 * 24 * 30 });
-      revalidatePath('/');
+      // إعادة توجيه الصفحة للوحة العامل برقم الكود
+      const { redirect } = await import('next/navigation');
+      redirect(`/?code=${code}`);
     }
   }
 
-  // 2. دالة تسجيل الخروج (الانصراف)
-  async function logout() {
+  // 2. دالة تسجيل الانصراف
+  async function handleLogout() {
     'use server';
-    const asyncCookies = await cookies();
-    const code = asyncCookies.get('workerCode')?.value;
-    if (code) {
-      await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'انصراف')`;
-    }
-    asyncCookies.delete('workerCode');
-    revalidatePath('/');
+    const { redirect } = await import('next/navigation');
+    redirect(`/`);
   }
 
-  // 3. دالة إرسال الطلبات (سلفة/إجازة)
+  // 3. دالة إرسال الطلبات
   async function submitRequest(formData) {
     'use server';
-    const asyncCookies = await cookies();
-    const code = asyncCookies.get('workerCode')?.value;
+    const code = formData.get('workerCode');
     const type = formData.get('reqType');
     const details = formData.get('details');
     
     if (code && type && details) {
       await sql`INSERT INTO requests (worker_code, req_type, details) VALUES (${code}, ${type}, ${details})`;
-      revalidatePath('/');
+      revalidatePath(`/?code=${code}`);
     }
   }
 
-  // --- شاشة تسجيل الدخول ---
+  // --- إذا لم يتم إدخال الكود (شاشة تسجيل الدخول) ---
   if (!workerCode) {
     return (
       <div style={{ padding: '20px', fontFamily: 'Arial', textAlign: 'center', direction: 'rtl', maxWidth: '400px', margin: '50px auto' }}>
         <h1 style={{ color: '#0070f3' }}>نظام إدارة المصنع</h1>
-        <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fff' }}>
-          <form action={login}>
-            <p style={{ fontWeight: 'bold' }}>أدخل الكود الخاص بك:</p>
-            <input type="number" name="code" placeholder="مثال: 1100" required style={{ padding: '10px', fontSize: '18px', width: '90%', marginBottom: '15px', textAlign: 'center' }} />
-            <button type="submit" style={{ padding: '12px', width: '100%', fontSize: '18px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-              تسجيل حضور ودخول
+        <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <form action={handleLogin}>
+            <p style={{ fontWeight: 'bold', fontSize: '16px' }}>أدخل كود العامل الخاص بك:</p>
+            <input 
+              type="number" 
+              name="code" 
+              placeholder="مثال: 1100" 
+              required 
+              style={{ padding: '12px', fontSize: '18px', width: '90%', marginBottom: '15px', textAlign: 'center', borderRadius: '5px', border: '1px solid #ccc' }} 
+            />
+            <button type="submit" style={{ padding: '12px', width: '100%', fontSize: '18px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+              دخول لوحة العامل
             </button>
           </form>
         </div>
@@ -83,7 +83,7 @@ export default async function WorkerPage() {
     );
   }
 
-  // --- شاشة اللوحة الشخصية للعامل ---
+  // --- لوحة التحكم الخاصة بالعامل (بعد تسجيل الدخول) ---
   let myRequests = [];
   try {
     const res = await sql`SELECT * FROM requests WHERE worker_code = ${workerCode} ORDER BY created_at DESC LIMIT 5`;
@@ -93,31 +93,32 @@ export default async function WorkerPage() {
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial', direction: 'rtl', maxWidth: '500px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0, color: '#333' }}>مرحباً بعامل كود: <span style={{ color: '#0070f3' }}>{workerCode}</span></h2>
-        <form action={logout}>
-          <button type="submit" style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-            تسجيل انصراف
+        <h2 style={{ margin: 0, color: '#333', fontSize: '18px' }}>أهلاً بك، كود: <span style={{ color: '#0070f3' }}>{workerCode}</span></h2>
+        <form action={handleLogout}>
+          <button type="submit" style={{ padding: '8px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '14px' }}>
+            خروج
           </button>
         </form>
       </div>
 
       <div style={{ padding: '15px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#f9f9f9', marginBottom: '20px' }}>
-        <h3 style={{ marginTop: 0, color: '#28a745' }}>تقديم طلب جديد</h3>
+        <h3 style={{ marginTop: 0, color: '#28a745', fontSize: '16px' }}>تقديم طلب جديد (سلفة / إجازة)</h3>
         <form action={submitRequest}>
-          <select name="reqType" style={{ padding: '10px', width: '100%', marginBottom: '10px', fontSize: '16px' }}>
+          <input type="hidden" name="workerCode" value={workerCode} />
+          <select name="reqType" style={{ padding: '10px', width: '100%', marginBottom: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}>
             <option value="سلفة">طلب سلفة</option>
             <option value="إجازة">طلب إجازة</option>
-            <option value="مشكلة">إبلاغ عن مشكلة/عطل</option>
+            <option value="مشكلة">إبلاغ عن عطل / مشكلة</option>
           </select>
-          <textarea name="details" placeholder="اكتب المبلغ (لو سلفة) أو تفاصيل طلبك هنا..." required style={{ padding: '10px', width: '100%', height: '80px', marginBottom: '10px', fontSize: '16px', resize: 'vertical' }}></textarea>
-          <button type="submit" style={{ padding: '10px', width: '100%', fontSize: '16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-            إرسال الطلب للإدارة
+          <textarea name="details" placeholder="اكتب التفاصيل أو المبلغ هنا..." required style={{ padding: '10px', width: '100%', height: '80px', marginBottom: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', resize: 'vertical' }}></textarea>
+          <button type="submit" style={{ padding: '10px', width: '100%', fontSize: '16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+            إرسال للإدارة
           </button>
         </form>
       </div>
 
       <div style={{ padding: '15px', backgroundColor: '#e9ecef', borderRadius: '8px' }}>
-        <h3 style={{ marginTop: 0, fontSize: '16px' }}>حالة طلباتك الأخيرة:</h3>
+        <h3 style={{ marginTop: 0, fontSize: '16px', color: '#333' }}>سجل طلباتك السابقة:</h3>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {myRequests.length > 0 ? myRequests.map((req, i) => {
             const reqTime = new Date(req.created_at + 'Z').toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' });
@@ -131,7 +132,7 @@ export default async function WorkerPage() {
               </li>
             );
           }) : (
-            <li style={{ color: '#666', fontSize: '14px' }}>لم تقم بإرسال أي طلبات بعد.</li>
+            <li style={{ color: '#666', fontSize: '14px' }}>لم تقم بإرسال أي طلبات حتى الآن.</li>
           )}
         </ul>
       </div>
