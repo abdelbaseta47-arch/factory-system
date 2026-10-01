@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
 export default async function WorkerPage() {
-  const cookieStore = cookies();
+  // التعديل هنا: إضافة كلمة await لانتظار تحميل الجلسة
+  const cookieStore = await cookies();
   const workerCode = cookieStore.get('workerCode')?.value;
 
   // 1. دالة تسجيل الدخول (الحضور)
@@ -11,7 +12,6 @@ export default async function WorkerPage() {
     'use server';
     const code = formData.get('code');
     if (code) {
-      // إنشاء الجداول لو مش موجودة
       await sql`
         CREATE TABLE IF NOT EXISTS attendance (
           id SERIAL PRIMARY KEY,
@@ -31,11 +31,10 @@ export default async function WorkerPage() {
         );
       `;
       
-      // تسجيل حضور
       await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'حضور')`;
       
-      // حفظ الكود في المتصفح لمدة شهر
-      cookies().set('workerCode', code, { maxAge: 60 * 60 * 24 * 30 });
+      const asyncCookies = await cookies();
+      asyncCookies.set('workerCode', code, { maxAge: 60 * 60 * 24 * 30 });
       revalidatePath('/');
     }
   }
@@ -43,18 +42,20 @@ export default async function WorkerPage() {
   // 2. دالة تسجيل الخروج (الانصراف)
   async function logout() {
     'use server';
-    const code = cookies().get('workerCode')?.value;
+    const asyncCookies = await cookies();
+    const code = asyncCookies.get('workerCode')?.value;
     if (code) {
       await sql`INSERT INTO attendance (worker_code, action_type) VALUES (${code}, 'انصراف')`;
     }
-    cookies().delete('workerCode');
+    asyncCookies.delete('workerCode');
     revalidatePath('/');
   }
 
   // 3. دالة إرسال الطلبات (سلفة/إجازة)
   async function submitRequest(formData) {
     'use server';
-    const code = cookies().get('workerCode')?.value;
+    const asyncCookies = await cookies();
+    const code = asyncCookies.get('workerCode')?.value;
     const type = formData.get('reqType');
     const details = formData.get('details');
     
@@ -64,7 +65,7 @@ export default async function WorkerPage() {
     }
   }
 
-  // --- إذا لم يكن مسجلاً الدخول (شاشة تسجيل الدخول) ---
+  // --- شاشة تسجيل الدخول ---
   if (!workerCode) {
     return (
       <div style={{ padding: '20px', fontFamily: 'Arial', textAlign: 'center', direction: 'rtl', maxWidth: '400px', margin: '50px auto' }}>
@@ -82,7 +83,7 @@ export default async function WorkerPage() {
     );
   }
 
-  // --- إذا كان مسجلاً الدخول (شاشة اللوحة الشخصية للعامل) ---
+  // --- شاشة اللوحة الشخصية للعامل ---
   let myRequests = [];
   try {
     const res = await sql`SELECT * FROM requests WHERE worker_code = ${workerCode} ORDER BY created_at DESC LIMIT 5`;
@@ -118,12 +119,18 @@ export default async function WorkerPage() {
       <div style={{ padding: '15px', backgroundColor: '#e9ecef', borderRadius: '8px' }}>
         <h3 style={{ marginTop: 0, fontSize: '16px' }}>حالة طلباتك الأخيرة:</h3>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {myRequests.length > 0 ? myRequests.map((req, i) => (
-            <li key={i} style={{ padding: '10px 0', borderBottom: '1px solid #ccc', fontSize: '14px', display: 'flex', justifyContent: 'space-between' }}>
-              <span><strong>{req.req_type}:</strong> {req.details}</span>
-              <span style={{ color: req.status === 'مقبول' ? 'green' : req.status === 'مرفوض' ? 'red' : 'orange', fontWeight: 'bold' }}>{req.status}</span>
-            </li>
-          )) : (
+          {myRequests.length > 0 ? myRequests.map((req, i) => {
+            const reqTime = new Date(req.created_at + 'Z').toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh', dateStyle: 'short', timeStyle: 'short' });
+            return (
+              <li key={i} style={{ padding: '10px 0', borderBottom: '1px solid #ccc', fontSize: '14px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span><strong>{req.req_type}:</strong> {req.details}</span>
+                  <span style={{ color: req.status === 'مقبول' ? 'green' : req.status === 'مرفوض' ? 'red' : 'orange', fontWeight: 'bold' }}>{req.status}</span>
+                </div>
+                <span style={{ fontSize: '12px', color: '#888' }}>{reqTime}</span>
+              </li>
+            );
+          }) : (
             <li style={{ color: '#666', fontSize: '14px' }}>لم تقم بإرسال أي طلبات بعد.</li>
           )}
         </ul>
