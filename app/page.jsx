@@ -8,9 +8,8 @@ export default async function WorkerDashboard({ searchParams }) {
   const currentTab = params?.tab || 'tasks';
   const selectedDate = params?.date || new Date().toISOString().split('T')[0];
   const requestSubtype = params?.sub || 'loan';
-  const lang = params?.lang || 'ar'; // نظام الترجمة
+  const lang = params?.lang || 'ar';
 
-  // قاموس الترجمة للواجهة
   const t = {
     ar: {
       title: "نظام إدارة المصنع",
@@ -99,7 +98,6 @@ export default async function WorkerDashboard({ searchParams }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'system-ui, -apple-system, sans-serif', direction: lang === 'ar' ? 'rtl' : 'ltr', margin: 0, padding: 0 }}>
       
-      {/* زر الترجمة تم تعديل مكانه لتجنب التداخل */}
       <div style={{ position: 'absolute', top: '15px', [lang === 'ar' ? 'left' : 'right']: '15px', zIndex: 1000 }}>
         <a 
           href={`/?code=${workerCode || ''}&project=${encodeURIComponent(currentProject || '')}&tab=${currentTab}&date=${selectedDate}&sub=${requestSubtype}&lang=${lang === 'ar' ? 'en' : 'ar'}`}
@@ -109,7 +107,6 @@ export default async function WorkerDashboard({ searchParams }) {
         </a>
       </div>
 
-      {/* ستايل الموبايل التفاعلي المصلح بالكامل */}
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; }
         
@@ -129,12 +126,10 @@ export default async function WorkerDashboard({ searchParams }) {
           overflow-y: auto;
         }
         
-        /* تفعيل ظهور القائمة */
         #menu-toggle:checked ~ .layout-container .sidebar {
           ${lang === 'ar' ? 'right' : 'left'}: 0;
         }
         
-        /* خلفية معتمة عند فتح القائمة */
         .overlay {
           display: none;
           position: fixed;
@@ -154,7 +149,7 @@ export default async function WorkerDashboard({ searchParams }) {
           padding: 15px;
           border-bottom: 1px solid #e2e8f0;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-          margin-top: 50px; /* مسافة لزر الترجمة */
+          margin-top: 50px;
         }
 
         .req-buttons-grid {
@@ -164,7 +159,6 @@ export default async function WorkerDashboard({ searchParams }) {
           margin-bottom: 20px;
         }
 
-        /* تنسيقات الشاشات الكبيرة */
         @media (min-width: 768px) {
           .layout-container { display: flex; min-height: 100vh; }
           .sidebar { position: static; ${lang === 'ar' ? 'right' : 'left'}: 0; box-shadow: 4px 0 10px rgba(0,0,0,0.05); }
@@ -176,7 +170,6 @@ export default async function WorkerDashboard({ searchParams }) {
         }
       `}} />
 
-      {/* مرحلة 1: تسجيل الدخول */}
       {!workerCode ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px', marginTop: '40px' }}>
           <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', borderTop: '5px solid #0284c7', textAlign: 'center' }}>
@@ -201,7 +194,6 @@ export default async function WorkerDashboard({ searchParams }) {
           </div>
         </div>
       ) : !currentProject ? (
-        /* مرحلة 2: اختيار المشروع */
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px', marginTop: '40px' }}>
           <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '450px', borderTop: '5px solid #16a34a' }}>
             <h2 style={{ color: '#1e293b', fontSize: '20px', margin: '0 0 8px 0', textAlign: 'center' }}>{t.welcome} {workerCode}</h2>
@@ -239,14 +231,12 @@ export default async function WorkerDashboard({ searchParams }) {
           </div>
         </div>
       ) : (
-        /* مرحلة 3: اللوحة الرئيسية */
         <div>
           <input type="checkbox" id="menu-toggle" style={{ display: 'none' }} />
 
           <div className="layout-container">
             <label htmlFor="menu-toggle" className="overlay"></label>
             
-            {/* الهيدر الخاص بالموبايل */}
             <div className="mobile-header">
               <label htmlFor="menu-toggle" style={{ background: '#0284c7', color: '#fff', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' }}>
                 {t.menuToggle}
@@ -254,25 +244,23 @@ export default async function WorkerDashboard({ searchParams }) {
               <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{t.welcome} {workerCode}</span>
             </div>
 
-            {/* القائمة الجانبية */}
             <aside className="sidebar">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>
                 <div>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#38bdf8' }}>{t.welcome} {workerCode}</h3>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>{currentProject}</span>
                 </div>
-                {/* زر الإغلاق */}
-                <label htmlFor="menu-toggle" className="close-btn" style={{ fontSize: '24px' }}>✖</label>
+                <label htmlFor="menu-toggle" className="close-btn" style={{ fontSize: '24px', cursor: 'pointer' }}>✖</label>
               </div>
 
               <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tasks&date=${selectedDate}&lang=${lang}`} onClick={() => document.getElementById('menu-toggle').checked = false} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tasks' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tasks&date=${selectedDate}&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tasks' ? '#0284c7' : 'transparent', color: '#fff' }}>
                   {t.tasksTab}
                 </a>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan&lang=${lang}`} onClick={() => document.getElementById('menu-toggle').checked = false} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'requests' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'requests' ? '#0284c7' : 'transparent', color: '#fff' }}>
                   {t.requestsTab}
                 </a>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${selectedDate}&lang=${lang}`} onClick={() => document.getElementById('menu-toggle').checked = false} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tracking' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${selectedDate}&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tracking' ? '#0284c7' : 'transparent', color: '#fff' }}>
                   {t.trackingTab}
                 </a>
               </nav>
@@ -288,10 +276,8 @@ export default async function WorkerDashboard({ searchParams }) {
               </form>
             </aside>
 
-            {/* المحتوى الرئيسي */}
             <main className="main-content">
               
-              {/* شريط الفلتر */}
               <div style={{ backgroundColor: '#ffffff', padding: '15px', borderRadius: '12px', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                 <h2 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '16px', width: '100%', textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   {currentTab === 'tasks' && t.tasksTitle}
@@ -317,7 +303,6 @@ export default async function WorkerDashboard({ searchParams }) {
                 </form>
               </div>
 
-              {/* التابة 1: المهام */}
               {currentTab === 'tasks' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                   <p style={{ color: '#64748b', fontSize: '14px', marginTop: 0, marginBottom: '20px' }}>{t.dateLabel} <strong>{selectedDate}</strong></p>
@@ -332,7 +317,6 @@ export default async function WorkerDashboard({ searchParams }) {
                 </div>
               )}
 
-              {/* التابة 2: تقديم الطلبات */}
               {currentTab === 'requests' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                   
@@ -370,8 +354,6 @@ export default async function WorkerDashboard({ searchParams }) {
                     </form>
                   )}
 
-                  {/* باقي نماذج الطلبات (إجازة / مشكلة) بنفس التنسيق */}
-                  {/* ... (لتقليل حجم الكود، نفس التنسيق السابق معتمد) ... */}
                    {requestSubtype === 'leave' && (
                     <form action={async (formData) => {
                       'use server';
@@ -424,10 +406,10 @@ export default async function WorkerDashboard({ searchParams }) {
                       <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>{t.sendIssue}</button>
                     </form>
                   )}
+
                 </div>
               )}
 
-              {/* التابة 3: المتابعة */}
               {currentTab === 'tracking' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                   <h3 style={{ marginTop: 0, color: '#1e293b', fontSize: '16px' }}>{t.trackingTitle} ({selectedDate})</h3>
