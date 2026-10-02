@@ -8,19 +8,115 @@ export default async function WorkerDashboard({ searchParams }) {
   const currentTab = params?.tab || 'tasks';
   const selectedDate = params?.date || new Date().toISOString().split('T')[0];
   const requestSubtype = params?.sub || 'loan';
+  const lang = params?.lang || 'ar'; // نظام الترجمة
+
+  // قاموس الترجمة للواجهة
+  const t = {
+    ar: {
+      title: "نظام إدارة المصنع",
+      loginPrompt: "أدخل كود العامل للمتابعة",
+      codePlaceholder: "أدخل الكود (مثال: 1100)",
+      loginBtn: "تسجيل الدخول",
+      welcome: "مرحباً، كود:",
+      selectProj: "الرجاء اختيار المشروع لتسجيل الحضور",
+      projLabel: "اختر المشروع الحالي:",
+      selectProjOption: "-- اضغط للاختيار --",
+      proj1: "مشروع أبراج المصنع",
+      proj2: "مشروع خط الإنتاج الجديد",
+      proj3: "مشروع الصيانة العامة",
+      startWorkBtn: "تسجيل حضور ودخول النظام",
+      tasksTab: "📋 المهام اليومية",
+      requestsTab: "✍️ تقديم طلب جديد",
+      trackingTab: "📊 متابعة الطلبات",
+      logoutBtn: "تسجيل خروج",
+      dateLabel: "تاريخ العرض:",
+      filterBtn: "فلترة",
+      tasksTitle: "المهام المطلوبة",
+      noTasks: "لا توجد مهام مسجلة لهذا التاريخ.",
+      requestsTitle: "نافذة تقديم الطلبات",
+      loanBtn: "💰 طلب سلفة",
+      leaveBtn: "🌴 طلب إجازة",
+      issueBtn: "⚠️️ إبلاغ عن مشكلة",
+      amountLabel: "المبلغ المطلوب (بالريال):",
+      notesLabel: "سبب أو تفاصيل السلفة:",
+      sendLoan: "إرسال طلب السلفة",
+      leaveTypeLabel: "نوع الإجازة:",
+      annualLeave: "إجازة سنوية",
+      casualLeave: "إجازة عارضة",
+      sickLeave: "إجازة مرضية",
+      leaveReasonLabel: "سبب الإجازة والتفاصيل:",
+      sendLeave: "إرسال طلب الإجازة",
+      issueDescLabel: "وصف المشكلة أو العطل:",
+      sendIssue: "إرسال البلاغ للإدارة",
+      trackingTitle: "سجل ومتابعة الطلبات",
+      noRequests: "لا توجد طلبات مرسلة في هذا التاريخ.",
+      statusPending: "قيد المراجعة",
+      menuToggle: "☰ القائمة"
+    },
+    en: {
+      title: "Factory System",
+      loginPrompt: "Enter worker code to continue",
+      codePlaceholder: "Code (e.g. 1100)",
+      loginBtn: "Login",
+      welcome: "Welcome, Code:",
+      selectProj: "Please select a project to check in",
+      projLabel: "Select Current Project:",
+      selectProjOption: "-- Click to select --",
+      proj1: "Towers Project",
+      proj2: "New Production Line",
+      proj3: "General Maintenance",
+      startWorkBtn: "Check In",
+      tasksTab: "📋 Daily Tasks",
+      requestsTab: "✍️ New Request",
+      trackingTab: "📊 Track Requests",
+      logoutBtn: "Logout",
+      dateLabel: "Date:",
+      filterBtn: "Filter",
+      tasksTitle: "Required Tasks",
+      noTasks: "No tasks for this date.",
+      requestsTitle: "Submit Request",
+      loanBtn: "💰 Cash Advance",
+      leaveBtn: "🌴 Leave Request",
+      issueBtn: "⚠️ Report Issue",
+      amountLabel: "Amount (SAR):",
+      notesLabel: "Advance Details / Reason:",
+      sendLoan: "Send Request",
+      leaveTypeLabel: "Leave Type:",
+      annualLeave: "Annual Leave",
+      casualLeave: "Casual Leave",
+      sickLeave: "Sick Leave",
+      leaveReasonLabel: "Reason & Details:",
+      sendLeave: "Send Request",
+      issueDescLabel: "Issue Description:",
+      sendIssue: "Send Report",
+      trackingTitle: "Requests Tracking",
+      noRequests: "No requests found for this date.",
+      statusPending: "Pending",
+      menuToggle: "☰ Menu"
+    }
+  }[lang];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'system-ui, -apple-system, sans-serif', direction: 'rtl', margin: 0, padding: 0 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'system-ui, -apple-system, sans-serif', direction: lang === 'ar' ? 'rtl' : 'ltr', margin: 0, padding: 0 }}>
       
-      {/* ستايل مخصص للتجاوب مع الموبايل (Responsive CSS) */}
+      {/* زر الترجمة بأقصى اليسار العلوي */}
+      <div style={{ position: 'absolute', top: '15px', left: lang === 'ar' ? '15px' : 'auto', right: lang === 'en' ? '15px' : 'auto', zIndex: 1000 }}>
+        <a 
+          href={`/?code=${workerCode || ''}&project=${encodeURIComponent(currentProject || '')}&tab=${currentTab}&date=${selectedDate}&sub=${requestSubtype}&lang=${lang === 'ar' ? 'en' : 'ar'}`}
+          style={{ backgroundColor: '#1e293b', color: '#fff', padding: '8px 15px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+        >
+          {lang === 'ar' ? 'English 🌐' : 'عربي 🌐'}
+        </a>
+      </div>
+
+      {/* ستايل الموبايل التفاعلي المصلح */}
       <style dangerouslySetInnerHTML={{__html: `
         * { box-sizing: border-box; }
         
-        /* إعدادات الموبايل الافتراضية */
         .sidebar {
           position: fixed;
           top: 0;
-          right: -320px; /* مخفية بالكامل */
+          ${lang === 'ar' ? 'right' : 'left'}: -320px;
           width: 280px;
           height: 100vh;
           background-color: #1e293b;
@@ -28,201 +124,177 @@ export default async function WorkerDashboard({ searchParams }) {
           padding: 20px;
           display: flex;
           flex-direction: column;
-          transition: right 0.3s ease-in-out;
-          z-index: 1000;
+          transition: 0.3s ease-in-out;
+          z-index: 1001;
           overflow-y: auto;
         }
         
-        /* تفعيل ظهور القائمة عند الضغط على الزر */
-        #menu-toggle:checked ~ .sidebar {
-          right: 0;
+        /* هذا هو السطر الذي تم إصلاحه لربط زر القائمة بالشريط الجانبي */
+        #menu-toggle:checked ~ .layout-container .sidebar {
+          ${lang === 'ar' ? 'right' : 'left'}: 0;
         }
         
-        /* خلفية داكنة عند فتح القائمة بالموبايل */
         .overlay {
           display: none;
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          z-index: 999;
+          background: rgba(0,0,0,0.6);
+          z-index: 1000;
         }
-        #menu-toggle:checked ~ .overlay {
-          display: block;
-        }
+        #menu-toggle:checked ~ .overlay { display: block; }
 
-        .main-content {
-          width: 100%;
-          padding: 15px;
-        }
+        .main-content { width: 100%; padding: 15px; }
 
         .mobile-header {
           display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 15px;
           background: #ffffff;
           padding: 15px;
           border-bottom: 1px solid #e2e8f0;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .close-btn { display: block; cursor: pointer; font-size: 20px; color: #94a3b8; }
-        
         .req-buttons-grid {
           display: grid;
-          grid-template-columns: 1fr; /* عمود واحد على الموبايل */
+          grid-template-columns: 1fr;
           gap: 10px;
           margin-bottom: 20px;
         }
 
-        /* إعدادات شاشات الكمبيوتر والتابلت الكبير */
         @media (min-width: 768px) {
           .layout-container { display: flex; min-height: 100vh; }
-          .sidebar {
-            position: static;
-            right: 0;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
-          }
+          .sidebar { position: static; ${lang === 'ar' ? 'right' : 'left'}: 0; box-shadow: 4px 0 10px rgba(0,0,0,0.05); }
           .overlay { display: none !important; }
           .main-content { flex: 1; padding: 40px; }
           .mobile-header { display: none; }
           .close-btn { display: none; }
-          .req-buttons-grid { grid-template-columns: repeat(3, 1fr); /* 3 أعمدة على الكمبيوتر */ }
+          .req-buttons-grid { grid-template-columns: repeat(3, 1fr); }
         }
       `}} />
 
-      {/* 1. مرحلة تسجيل الدخول: بالكود فقط */}
+      {/* مرحلة 1: تسجيل الدخول */}
       {!workerCode ? (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
-          <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', borderTop: '5px solid #0284c7', textAlign: 'center' }}>
-            <h1 style={{ color: '#1e293b', fontSize: '24px', margin: '0 0 10px 0' }}>نظام إدارة المصنع</h1>
-            <p style={{ color: '#64748b', fontSize: '15px', margin: '0 0 25px 0' }}>أدخل كود العامل للمتابعة</p>
+          <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', borderTop: '5px solid #0284c7', textAlign: 'center', marginTop: '30px' }}>
+            <h1 style={{ color: '#1e293b', fontSize: '24px', margin: '0 0 10px 0' }}>{t.title}</h1>
+            <p style={{ color: '#64748b', fontSize: '15px', margin: '0 0 25px 0' }}>{t.loginPrompt}</p>
 
             <form action={async (formData) => {
               'use server';
               const code = formData.get('code');
+              const currentLang = formData.get('lang');
               if (code) {
                 const { redirect } = await import('next/navigation');
-                redirect(`/?code=${code}`);
+                redirect(`/?code=${code}&lang=${currentLang}`);
               }
             }}>
-              <input 
-                type="number" 
-                name="code" 
-                placeholder="مثال: 1100" 
-                required 
-                style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '18px', textAlign: 'center', backgroundColor: '#f8fafc', outline: 'none', marginBottom: '20px' }} 
-              />
+              <input type="hidden" name="lang" value={lang} />
+              <input type="number" name="code" placeholder={t.codePlaceholder} required style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '18px', textAlign: 'center', backgroundColor: '#f8fafc', outline: 'none', marginBottom: '20px' }} />
               <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
-                تسجيل الدخول
+                {t.loginBtn}
               </button>
             </form>
           </div>
         </div>
       ) : !currentProject ? (
-        /* 2. مرحلة اختيار المشروع وتأكيد الحضور */
+        /* مرحلة 2: اختيار المشروع */
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
-          <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '450px', borderTop: '5px solid #16a34a' }}>
-            <h2 style={{ color: '#1e293b', fontSize: '20px', margin: '0 0 8px 0', textAlign: 'center' }}>مرحباً بك، كود: {workerCode}</h2>
-            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 25px 0', textAlign: 'center' }}>الرجاء اختيار المشروع لتسجيل الحضور</p>
+          <div style={{ background: '#ffffff', padding: '40px 30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '450px', borderTop: '5px solid #16a34a', marginTop: '30px' }}>
+            <h2 style={{ color: '#1e293b', fontSize: '20px', margin: '0 0 8px 0', textAlign: 'center' }}>{t.welcome} {workerCode}</h2>
+            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 25px 0', textAlign: 'center' }}>{t.selectProj}</p>
 
             <form action={async (formData) => {
               'use server';
               const code = formData.get('code');
               const project = formData.get('project');
+              const currentLang = formData.get('lang');
               if (code && project) {
-                await sql`
-                  CREATE TABLE IF NOT EXISTS worker_sessions (
-                    id SERIAL PRIMARY KEY,
-                    worker_code VARCHAR(50),
-                    project_name VARCHAR(100),
-                    login_date DATE DEFAULT CURRENT_DATE
-                  );
-                `;
+                await sql`CREATE TABLE IF NOT EXISTS worker_sessions (id SERIAL PRIMARY KEY, worker_code VARCHAR(50), project_name VARCHAR(100), login_date DATE DEFAULT CURRENT_DATE);`;
                 await sql`INSERT INTO worker_sessions (worker_code, project_name) VALUES (${code}, ${project})`;
                 const { redirect } = await import('next/navigation');
-                redirect(`/?code=${code}&project=${encodeURIComponent(project)}&tab=tasks`);
+                redirect(`/?code=${code}&project=${encodeURIComponent(project)}&tab=tasks&lang=${currentLang}`);
               }
             }}>
               <input type="hidden" name="code" value={workerCode} />
+              <input type="hidden" name="lang" value={lang} />
               
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>اختر المشروع الحالي:</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.projLabel}</label>
                 <select name="project" required style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '15px', backgroundColor: '#f8fafc', outline: 'none' }}>
-                  <option value="">-- اضغط للاختيار --</option>
-                  <option value="مشروع أبراج المصنع">مشروع أبراج المصنع</option>
-                  <option value="مشروع خط الإنتاج الجديد">مشروع خط الإنتاج الجديد</option>
-                  <option value="مشروع الصيانة العامة">مشروع الصيانة العامة</option>
+                  <option value="">{t.selectProjOption}</option>
+                  <option value={t.proj1}>{t.proj1}</option>
+                  <option value={t.proj2}>{t.proj2}</option>
+                  <option value={t.proj3}>{t.proj3}</option>
                 </select>
               </div>
 
               <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
-                تسجيل حضور ودخول النظام
+                {t.startWorkBtn}
               </button>
             </form>
           </div>
         </div>
       ) : (
-        /* 3. اللوحة الرئيسية المتجاوبة مع القائمة الجانبية */
+        /* مرحلة 3: اللوحة الرئيسية للعامل */
         <div>
-          {/* المخفي الذي يتحكم في ظهور القائمة بالموبايل */}
+          {/* متحكمات القائمة الجانبية */}
           <input type="checkbox" id="menu-toggle" style={{ display: 'none' }} />
-          
-          {/* التعتيم خلف القائمة عند فتحها بالموبايل */}
           <label htmlFor="menu-toggle" className="overlay"></label>
 
           <div className="layout-container">
             
-            {/* الهيدر الخاص بالموبايل فقط */}
+            {/* الهيدر الخاص بالموبايل لتشغيل القائمة */}
             <div className="mobile-header">
               <label htmlFor="menu-toggle" style={{ background: '#0284c7', color: '#fff', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold' }}>
-                ☰ القائمة
+                {t.menuToggle}
               </label>
-              <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>كود: {workerCode}</span>
+              <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{t.welcome} {workerCode}</span>
             </div>
 
-            {/* القائمة الجانبية بالطول */}
+            {/* القائمة الجانبية */}
             <aside className="sidebar">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>
                 <div>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#38bdf8' }}>العامل: {workerCode}</h3>
-                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>المشروع: {currentProject}</span>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#38bdf8' }}>{t.welcome} {workerCode}</h3>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>{currentProject}</span>
                 </div>
-                {/* زر إغلاق القائمة في الموبايل */}
-                <label htmlFor="menu-toggle" className="close-btn">✖</label>
+                {/* زر الإغلاق داخل القائمة للموبايل */}
+                <label htmlFor="menu-toggle" className="close-btn" style={{ fontSize: '24px' }}>✖</label>
               </div>
 
               <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tasks&date=${selectedDate}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tasks' ? '#0284c7' : 'transparent', color: '#fff' }}>
-                  📋 المهام اليومية
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tasks&date=${selectedDate}&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tasks' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                  {t.tasksTab}
                 </a>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'requests' ? '#0284c7' : 'transparent', color: '#fff' }}>
-                  ✍️ تقديم طلب جديد
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'requests' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                  {t.requestsTab}
                 </a>
-                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${selectedDate}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tracking' ? '#0284c7' : 'transparent', color: '#fff' }}>
-                  📊 متابعة الطلبات
+                <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${selectedDate}&lang=${lang}`} style={{ padding: '14px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', backgroundColor: currentTab === 'tracking' ? '#0284c7' : 'transparent', color: '#fff' }}>
+                  {t.trackingTab}
                 </a>
               </nav>
 
               <form action={async () => {
                 'use server';
                 const { redirect } = await import('next/navigation');
-                redirect(`/`);
+                redirect(`/?lang=${lang}`);
               }}>
                 <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', marginTop: '20px' }}>
-                  تسجيل خروج
+                  {t.logoutBtn}
                 </button>
               </form>
             </aside>
 
-            {/* المحتوى الرئيسي */}
+            {/* محتوى الصفحة الرئيسي */}
             <main className="main-content">
               
-              {/* شريط الفلتر اليومي */}
-              <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                <h2 style={{ margin: 0, color: '#1e293b', fontSize: '18px' }}>
-                  {currentTab === 'tasks' && 'المهام المطلوبة'}
-                  {currentTab === 'requests' && 'نافذة تقديم الطلبات'}
-                  {currentTab === 'tracking' && 'سجل ومتابعة الطلبات'}
+              {/* شريط الفلتر بالتاريخ */}
+              <div style={{ backgroundColor: '#ffffff', padding: '15px', borderRadius: '12px', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                <h2 style={{ margin: 0, color: '#1e293b', fontSize: '16px' }}>
+                  {currentTab === 'tasks' && t.tasksTitle}
+                  {currentTab === 'requests' && t.requestsTitle}
+                  {currentTab === 'tracking' && t.trackingTitle}
                 </h2>
 
                 <form method="GET" style={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%', maxWidth: '300px' }}>
@@ -230,6 +302,7 @@ export default async function WorkerDashboard({ searchParams }) {
                   <input type="hidden" name="project" value={currentProject} />
                   <input type="hidden" name="tab" value={currentTab} />
                   <input type="hidden" name="sub" value={requestSubtype} />
+                  <input type="hidden" name="lang" value={lang} />
                   <input 
                     type="date" 
                     name="date" 
@@ -237,45 +310,36 @@ export default async function WorkerDashboard({ searchParams }) {
                     style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
                   />
                   <button type="submit" style={{ backgroundColor: '#1e293b', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-                    فلترة
+                    {t.filterBtn}
                   </button>
                 </form>
               </div>
 
-              {/* محتوى التابة الأولى: المهام */}
+              {/* التابة 1: المهام */}
               {currentTab === 'tasks' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                  <p style={{ color: '#64748b', fontSize: '14px', marginTop: 0, marginBottom: '20px' }}>تاريخ العرض: <strong>{selectedDate}</strong></p>
+                  <p style={{ color: '#64748b', fontSize: '14px', marginTop: 0, marginBottom: '20px' }}>{t.dateLabel} <strong>{selectedDate}</strong></p>
                   
-                  {/* مهام تجريبية */}
-                  <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', borderRight: '4px solid #0284c7', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
+                  <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', borderRight: lang === 'ar' ? '4px solid #0284c7' : 'none', borderLeft: lang === 'en' ? '4px solid #0284c7' : 'none', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <h4 style={{ margin: 0, color: '#1e293b', fontSize: '15px' }}>توريد وتركيب الواجهات الألومنيوم</h4>
-                      <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>قيد التنفيذ</span>
+                      <h4 style={{ margin: 0, color: '#1e293b', fontSize: '15px' }}>{lang === 'ar' ? 'توريد وتركيب الواجهات الألومنيوم' : 'Supply and Install Aluminum Facades'}</h4>
+                      <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{lang === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</span>
                     </div>
-                    <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>القطاع الشمالي - الدور الثاني</p>
+                    <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>{lang === 'ar' ? 'القطاع الشمالي - الدور الثاني' : 'North Sector - Second Floor'}</p>
                   </div>
                 </div>
               )}
 
-              {/* محتوى التابة الثانية: تقديم الطلبات */}
+              {/* التابة 2: تقديم الطلبات */}
               {currentTab === 'requests' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
                   
-                  {/* الأزارير الثلاثة تتجاوب مع الشاشة (تصبح فوق بعضها بالموبايل وجنب بعض بالكمبيوتر) */}
                   <div className="req-buttons-grid">
-                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'loan' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'loan' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>
-                      💰 طلب سلفة
-                    </a>
-                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=leave`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'leave' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'leave' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>
-                      🌴 طلب إجازة
-                    </a>
-                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=issue`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'issue' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'issue' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>
-                      ⚠️ إبلاغ عن مشكلة
-                    </a>
+                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=loan&lang=${lang}`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'loan' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'loan' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>{t.loanBtn}</a>
+                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=leave&lang=${lang}`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'leave' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'leave' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>{t.leaveBtn}</a>
+                    <a href={`/?code=${workerCode}&project=${encodeURIComponent(currentProject)}&tab=requests&date=${selectedDate}&sub=issue&lang=${lang}`} style={{ padding: '12px', textAlign: 'center', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: requestSubtype === 'issue' ? '#0284c7' : '#f1f5f9', color: requestSubtype === 'issue' ? '#fff' : '#334155', border: '1px solid #cbd5e1' }}>{t.issueBtn}</a>
                   </div>
 
-                  {/* فورم طلب سلفة */}
                   {requestSubtype === 'loan' && (
                     <form action={async (formData) => {
                       'use server';
@@ -283,38 +347,27 @@ export default async function WorkerDashboard({ searchParams }) {
                       const amount = formData.get('amount');
                       const notes = formData.get('notes');
                       const reqDate = formData.get('reqDate');
-                      
-                      await sql`
-                        CREATE TABLE IF NOT EXISTS requests (
-                          id SERIAL PRIMARY KEY,
-                          worker_code VARCHAR(50),
-                          req_type VARCHAR(50),
-                          details TEXT,
-                          status VARCHAR(50) DEFAULT 'قيد المراجعة',
-                          request_date DATE
-                        );
-                      `;
-                      await sql`INSERT INTO requests (worker_code, req_type, details, request_date) VALUES (${code}, 'سلفة مالية', ${'المبلغ: ' + amount + ' ريال - ملاحظات: ' + notes}, ${reqDate})`;
-                      
+                      const currentLang = formData.get('lang');
+                      await sql`CREATE TABLE IF NOT EXISTS requests (id SERIAL PRIMARY KEY, worker_code VARCHAR(50), req_type VARCHAR(50), details TEXT, status VARCHAR(50) DEFAULT 'قيد المراجعة', request_date DATE);`;
+                      await sql`INSERT INTO requests (worker_code, req_type, details, request_date) VALUES (${code}, 'سلفة مالية', ${'المبلغ: ' + amount + ' - ملاحظات: ' + notes}, ${reqDate})`;
                       const { redirect } = await import('next/navigation');
-                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}`);
+                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}&lang=${currentLang}`);
                     }}>
                       <input type="hidden" name="workerCode" value={workerCode} />
                       <input type="hidden" name="reqDate" value={selectedDate} />
-
+                      <input type="hidden" name="lang" value={lang} />
                       <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>المبلغ المطلوب (بالريال):</label>
-                        <input type="number" name="amount" placeholder="مثال: 500" required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.amountLabel}</label>
+                        <input type="number" name="amount" required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
                       </div>
                       <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>سبب أو تفاصيل السلفة:</label>
-                        <textarea name="notes" placeholder="اكتب السبب..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '80px', outline: 'none' }}></textarea>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.notesLabel}</label>
+                        <textarea name="notes" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '80px', outline: 'none' }}></textarea>
                       </div>
-                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>إرسال طلب السلفة</button>
+                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>{t.sendLoan}</button>
                     </form>
                   )}
 
-                  {/* فورم طلب إجازة */}
                   {requestSubtype === 'leave' && (
                     <form action={async (formData) => {
                       'use server';
@@ -322,72 +375,67 @@ export default async function WorkerDashboard({ searchParams }) {
                       const leaveType = formData.get('leaveType');
                       const reason = formData.get('reason');
                       const reqDate = formData.get('reqDate');
-
-                      await sql`INSERT INTO requests (worker_code, req_type, details, request_date) VALUES (${code}, 'طلب إجازة', ${'نوع الإجازة: ' + leaveType + ' - السبب: ' + reason}, ${reqDate})`;
-                      
+                      const currentLang = formData.get('lang');
+                      await sql`INSERT INTO requests (worker_code, req_type, details, request_date) VALUES (${code}, 'طلب إجازة', ${'النوع: ' + leaveType + ' - السبب: ' + reason}, ${reqDate})`;
                       const { redirect } = await import('next/navigation');
-                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}`);
+                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}&lang=${currentLang}`);
                     }}>
                       <input type="hidden" name="workerCode" value={workerCode} />
                       <input type="hidden" name="reqDate" value={selectedDate} />
-
+                      <input type="hidden" name="lang" value={lang} />
                       <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>نوع الإجازة:</label>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.leaveTypeLabel}</label>
                         <select name="leaveType" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}>
-                          <option value="إجازة سنوية">إجازة سنوية</option>
-                          <option value="إجازة عارضة">إجازة عارضة</option>
-                          <option value="إجازة مرضية">إجازة مرضية</option>
+                          <option value={t.annualLeave}>{t.annualLeave}</option>
+                          <option value={t.casualLeave}>{t.casualLeave}</option>
+                          <option value={t.sickLeave}>{t.sickLeave}</option>
                         </select>
                       </div>
                       <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>سبب الإجازة والتفاصيل:</label>
-                        <textarea name="reason" placeholder="اكتب السبب..." required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '80px', outline: 'none' }}></textarea>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.leaveReasonLabel}</label>
+                        <textarea name="reason" required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '80px', outline: 'none' }}></textarea>
                       </div>
-                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>إرسال طلب الإجازة</button>
+                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>{t.sendLeave}</button>
                     </form>
                   )}
 
-                  {/* فورم إبلاغ عن مشكلة */}
                   {requestSubtype === 'issue' && (
                     <form action={async (formData) => {
                       'use server';
                       const code = formData.get('workerCode');
                       const desc = formData.get('desc');
                       const reqDate = formData.get('reqDate');
-
+                      const currentLang = formData.get('lang');
                       await sql`INSERT INTO requests (worker_code, req_type, details, request_date) VALUES (${code}, 'إبلاغ عن مشكلة', ${desc}, ${reqDate})`;
-                      
                       const { redirect } = await import('next/navigation');
-                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}`);
+                      redirect(`/?code=${code}&project=${encodeURIComponent(currentProject)}&tab=tracking&date=${reqDate}&lang=${currentLang}`);
                     }}>
                       <input type="hidden" name="workerCode" value={workerCode} />
                       <input type="hidden" name="reqDate" value={selectedDate} />
-
+                      <input type="hidden" name="lang" value={lang} />
                       <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>وصف المشكلة أو العطل:</label>
-                        <textarea name="desc" placeholder="اشرح المشكلة بالتفصيل..." required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '100px', outline: 'none' }}></textarea>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#334155', fontSize: '14px' }}>{t.issueDescLabel}</label>
+                        <textarea name="desc" required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', height: '100px', outline: 'none' }}></textarea>
                       </div>
-                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>إرسال البلاغ للإدارة</button>
+                      <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>{t.sendIssue}</button>
                     </form>
                   )}
-
                 </div>
               )}
 
-              {/* محتوى التابة الثالثة: متابعة الطلبات */}
+              {/* التابة 3: المتابعة */}
               {currentTab === 'tracking' && (
                 <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-                  <h3 style={{ marginTop: 0, color: '#1e293b', fontSize: '16px' }}>طلباتك المسجلة بتاريخ: {selectedDate}</h3>
-
+                  <h3 style={{ marginTop: 0, color: '#1e293b', fontSize: '16px' }}>{t.trackingTitle} ({selectedDate})</h3>
                   <div style={{ marginTop: '15px' }}>
                     <div style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <strong style={{ color: '#1e293b', display: 'block', marginBottom: '4px', fontSize: '14px' }}>سلفة مالية</strong>
-                        <span style={{ color: '#64748b', fontSize: '13px' }}>المبلغ: 500 ريال</span>
+                        <strong style={{ color: '#1e293b', display: 'block', marginBottom: '4px', fontSize: '14px' }}>{lang === 'ar' ? 'سلفة مالية' : 'Cash Advance'}</strong>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{lang === 'ar' ? 'المبلغ: 500 ريال' : 'Amount: 500 SAR'}</span>
                       </div>
-                      <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>قيد المراجعة</span>
+                      <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>{t.statusPending}</span>
                     </div>
-                    <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', marginTop: '20px' }}>لا توجد طلبات أخرى في هذا التاريخ.</p>
+                    <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', marginTop: '20px' }}>{t.noRequests}</p>
                   </div>
                 </div>
               )}
